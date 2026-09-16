@@ -1,11 +1,13 @@
 import { test, expect } from '@playwright/test';
-import { Booking, BookingResponse } from '../../src/types/Booking';
+import { BookingClient } from '@/api/BookingClient';
 
 test('Отправка и проверка POST', async ({ request }) => {
-  const postResponse = await request.post(
-    'https://restful-booker.herokuapp.com/booking',
+
+  const client = new BookingClient(request)
+
+  const created = await client.create(
+    
     {
-      data: {
         firstname: 'Jim',
         lastname: 'Brown',
         totalprice: 111,
@@ -16,34 +18,28 @@ test('Отправка и проверка POST', async ({ request }) => {
         },
         additionalneeds: 'Breakfast',
       },
-    }
+    
   );
 
-  expect(postResponse.status()).toBe(200);
-  const postBody: BookingResponse = await postResponse.json();
 
-  expect(postBody.bookingid).toBeGreaterThan(0)
-  expect(postBody.booking.firstname).toBe('Jim');
-  expect(postBody.booking.lastname).toBe('Brown');
-  expect(postBody.booking.totalprice).toBe(111);
-  expect(postBody.booking.depositpaid).toBe(true);
-  expect(postBody.booking.bookingdates.checkin).toBe('2018-01-01');
-  expect(postBody.booking.bookingdates.checkout).toBe('2019-01-01');
-  expect(postBody.booking.additionalneeds).toBe('Breakfast')
+  expect(created.bookingid).toBeGreaterThan(0);
+  expect(created.booking.firstname).toBe('Jim');
+  expect(created.booking.lastname).toBe('Brown');
+  expect(created.booking.totalprice).toBe(111);
+  expect(created.booking.depositpaid).toBe(true);
+  expect(created.booking.bookingdates.checkin).toBe('2018-01-01');
+  expect(created.booking.bookingdates.checkout).toBe('2019-01-01');
+  expect(created.booking.additionalneeds).toBe('Breakfast');
 
 
-  const getResponse = await request.get(`https://restful-booker.herokuapp.com/booking/${postBody.bookingid}`);
+  const fetched = await client.getById(created.bookingid);
 
-  expect(getResponse.status()).toBe(200);
-
-  const getBody = await getResponse.json();
-
-  expect(getBody.firstname).toBe('Jim');
-  expect(getBody.lastname).toBe('Brown');
-  expect(getBody.totalprice).toBe(111);
-  expect(getBody.depositpaid).toBe(true);
-  expect(getBody.bookingdates.checkin).toBe('2018-01-01');
-  expect(getBody.bookingdates.checkout).toBe('2019-01-01');
-  expect(getBody.additionalneeds).toBe('Breakfast');
+  expect(fetched.firstname).toBe('Jim');
+  expect(fetched.lastname).toBe('Brown');
+  expect(fetched.totalprice).toBe(111);
+  expect(fetched.depositpaid).toBe(true);
+  expect(fetched.bookingdates.checkin).toBe('2018-01-01');
+  expect(fetched.bookingdates.checkout).toBe('2019-01-01');
+  expect(fetched.additionalneeds).toBe('Breakfast');
 
 });
